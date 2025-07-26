@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f4f4f4;
+    }
+    h1 {  
+      color: #333;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 5px;
+      margin-right: 10px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 15px;
+    }
+    #resultado {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #historial {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calculadora</h1>
+
+  <input type="number" id="num1" placeholder="Número 1">
+  <input type="number" id="num2" placeholder="Número 2">
+
+  <br>
+
+  <button onclick="calcular('+')">Sumar</button>
+  <button onclick="calcular('-')">Restar</button>
+  <button onclick="calcular('*')">Multiplicar</button>
+  <button onclick="calcular('/')">Dividir</button>
+  <button onclick="limpiarHistorial()">Limpiar Historial</button>
+
+  <div id="resultado">Resultado: </div>
+
+  <div id="historial">
+    <h3>Historial:</h3>
+    <ul id="listaHistorial"></ul>
+  </div>
+
+  <script>
+    // Cargar historial al iniciar
+    window.onload = function () {
+      const guardado = localStorage.getItem("historial");
+      if (guardado) {
+        document.getElementById("listaHistorial").innerHTML = guardado;
+      }
+    };
+
+    function calcular(operador) {
+      const n1 = parseFloat(document.getElementById("num1").value);
+      const n2 = parseFloat(document.getElementById("num2").value);
+      let resultado;
+
+      if (isNaN(n1) || isNaN(n2)) {
+        alert("Ingresa números válidos.");
+        return;
+      }
+
+      switch (operador) {
+        case '+': resultado = n1 + n2; break;
+        case '-': resultado = n1 - n2; break;
+        case '*': resultado = n1 * n2; break;
+        case '/':
+          if (n2 === 0) {
+            alert("No se puede dividir entre cero.");
+            return;
+          }
+          resultado = n1 / n2;
+          break;
+      }
+
+      const operacion = `${n1} ${operador} ${n2} = ${resultado.toFixed(2)}`;
+      document.getElementById("resultado").innerText = "Resultado: " + resultado.toFixed(2);
+
+      // Agregar al historial
+      const li = document.createElement("li");
+      li.textContent = operacion;
+      document.getElementById("listaHistorial").appendChild(li);
+
+      // Guardar en localStorage
+      localStorage.setItem("historial", document.getElementById("listaHistorial").innerHTML);
+    }
+
+    function limpiarHistorial() {
+      document.getElementById("listaHistorial").innerHTML = "";
+      localStorage.removeItem("historial");
+    }
+  </script>
+
+</body>
+</html>
