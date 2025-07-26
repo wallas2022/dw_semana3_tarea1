@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Punto Atrapado</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      margin-top: 40px;
+    }
+
+    #circle {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background-color: #eee;
+      border: 4px solid #aaa;
+      margin: 20px auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: red;
+      position: absolute;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+    }
+
+    #score, #timer, #game-over {
+      font-size: 1.5em;
+      margin-top: 10px;
+    }
+
+    #game-over {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Punto Atrapado</h1>
+  <div id="timer">Tiempo: 30s</div>
+  <div id="score">Puntos: 0</div>
+
+  <div id="circle">
+    <div id="dot"></div>
+  </div>
+
+  <div id="game-over"></div>
+
+  <script>
+    const dot = document.getElementById("dot");
+    const circle = document.getElementById("circle");
+    const timerEl = document.getElementById("timer");
+    const scoreEl = document.getElementById("score");
+    const gameOverEl = document.getElementById("game-over");
+
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval;
+    let gameActive = true;
+
+    function moveDot() {
+      const radius = 150; // mitad del círculo (300px)
+      let x, y;
+
+      do {
+        x = Math.random() * 300;
+        y = Math.random() * 300;
+        const dx = x - 150;
+        const dy = y - 150;
+        if (Math.sqrt(dx * dx + dy * dy) <= 130) break; // evitar que se salga
+      } while (true);
+
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+    }
+
+    dot.addEventListener("click", () => {
+      if (!gameActive) return;
+      score++;
+      scoreEl.textContent = `Puntos: ${score}`;
+      moveDot();
+    });
+
+    function startTimer() {
+      gameInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Tiempo: ${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+          clearInterval(gameInterval);
+          gameActive = false;
+          dot.style.display = "none";
+          gameOverEl.textContent = `¡Juego terminado! Puntaje final: ${score}`;
+        }
+      }, 1000);
+    }
+
+    // Iniciar juego
+    moveDot();
+    startTimer();
+  </script>
+
+</body>
+</html>
