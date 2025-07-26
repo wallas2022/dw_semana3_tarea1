@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador en React</title>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body, #root {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .counter {
+            font-size: 5em;
+            margin: 20px 0;
+        }
+        .buttons button, .toggle-button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .toggle-button {
+            margin-top: 30px;
+            background-color: #555;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+
+            const [count, setCount] = useState(0);
+            const [isDarkMode, setIsDarkMode] = useState(false);
+
+            const increment = () => setCount(count + 1);
+            const decrement = () => setCount(count - 1);
+            const reset = () => setCount(0);
+            const toggleDarkMode = () => setIsDarkMode(!isDarkMode); 
+
+            const appStyles = {
+                backgroundColor: isDarkMode ? '#282c34' : '#ffffff',
+                color: isDarkMode ? '#ffffff' : '#282c34',
+            };
+
+            const buttonStyles = {
+                backgroundColor: isDarkMode ? '#61dafb' : '#f0f0f0',
+                color: isDarkMode ? '#282c34' : '#282c34',
+            }
+
+            return (
+                <div className="container" style={appStyles}>
+                    <h1>Contador con React</h1>
+                    <div className="counter">{count}</div>
+                    <div className="buttons">
+                        <button onClick={decrement} style={buttonStyles}>-</button>
+                        <button onClick={reset} style={buttonStyles}>Reset</button>
+                        <button onClick={increment} style={buttonStyles}>+</button>
+                    </div>
+                    <div>
+                        <button className="toggle-button" onClick={toggleDarkMode}>
+                            {isDarkMode ? 'Activar Modo Claro' : 'Activar Modo Oscuro'}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+
+</body>
+</html>
