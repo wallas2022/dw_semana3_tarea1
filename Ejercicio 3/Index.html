@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <!-- Enlace a Tailwind CSS para estilos modernos -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados para la aplicación */
+        body {
+            font-family: 'Inter', sans-serif; /* Fuente Inter */
+            background-color: #f0f2f5; /* Color de fondo suave */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinea al inicio para que el contenido no esté centrado verticalmente */
+            min-height: 100vh; /* Altura mínima del viewport */
+            padding: 20px; /* Espaciado alrededor del contenido */
+            box-sizing: border-box; /* Incluye padding y border en el tamaño total */
+        }
+
+        .container {
+            background-color: #ffffff; /* Fondo blanco para el contenedor principal */
+            padding: 30px; /* Espaciado interno */
+            border-radius: 15px; /* Bordes redondeados */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra suave */
+            width: 100%;
+            max-width: 500px; /* Ancho máximo */
+            margin-top: 50px; /* Espacio superior para centrar mejor en la vista */
+        }
+        /* Estilo para tareas completadas: texto tachado y color gris */
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb; /* Separador entre tareas */
+        }
+
+            .task-item:last-child {
+                border-bottom: none; /* Sin separador en la última tarea */
+            }
+
+        .task-text {
+            flex-grow: 1; /* Permite que el texto ocupe el espacio disponible */
+            margin-left: 10px;
+            font-size: 1.1em;
+            color: #374151;
+        }
+        /* Estilo para la caja de mensajes (sustituto de alert) */
+        .message-box {
+            position: fixed; /* Posición fija en la pantalla */
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%); /* Centra horizontalmente */
+            background-color: #f87171; /* Color de fondo para errores */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000; /* Asegura que esté por encima de otros elementos */
+            opacity: 0; /* Inicialmente oculto */
+            transition: opacity 0.3s ease-in-out; /* Transición suave para aparecer/desaparecer */
+        }
+
+            .message-box.show {
+                opacity: 1; /* Muestra el mensaje */
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Mi Lista de Tareas</h1>
+
+        <!-- Input para añadir nuevas tareas y botón -->
+        <div class="flex mb-6">
+            <input type="text" id="newTaskInput" placeholder="Añadir nueva tarea..."
+                   class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="addTaskButton"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-r-lg shadow-md transition duration-300 ease-in-out">
+                Añadir
+            </button>
+        </div>
+
+        <!-- Lista de tareas donde se añadirán dinámicamente -->
+        <ul id="taskList" class="bg-gray-50 rounded-lg p-4 shadow-inner">
+            <!-- Tasks will be added here dynamically -->
+        </ul>
+
+        <!-- Botón para eliminar tareas completadas -->
+        <button id="clearCompletedButton"
+                class="mt-6 w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+            Eliminar Tareas Completadas
+        </button>
+    </div>
+
+    <!-- Contenedor para mensajes temporales (sustituto de alert) -->
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // Get DOM element references
+        const newTaskInput = document.getElementById('newTaskInput');
+        const addTaskButton = document.getElementById('addTaskButton');
+        const taskList = document.getElementById('taskList');
+        const clearCompletedButton = document.getElementById('clearCompletedButton');
+        const messageBox = document.getElementById('messageBox');
+
+        // Function to show temporary messages
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            if (type === 'error') {
+                messageBox.style.backgroundColor = '#f87171'; // Red for errors
+            } else if (type === 'success') {
+                messageBox.style.backgroundColor = '#34d399'; // Green for success
+            }
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000); // Message disappears after 3 seconds
+        }
+
+        // Load tasks from localStorage on page load
+        document.addEventListener('DOMContentLoaded', loadTasks);
+
+        // Event listener for adding a new task
+        addTaskButton.addEventListener('click', addTask);
+        newTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Event listener for clearing completed tasks
+        clearCompletedButton.addEventListener('click', clearCompletedTasks);
+
+        /**
+         * Adds a new task to the list.
+         * Validates that the input is not empty.
+         */
+        function addTask() {
+            const taskText = newTaskInput.value.trim(); // Remove leading/trailing whitespace
+
+            if (taskText === '') {
+                showMessage('¡La tarea no puede estar vacía!');
+                return;
+            }
+
+            const task = {
+                id: Date.now(), // Unique ID for the task
+                text: taskText,
+                completed: false
+            };
+
+            createTaskElement(task); // Create the HTML element for the task
+            saveTask(task); // Save the task to localStorage
+            newTaskInput.value = ''; // Clear the input field
+            showMessage('Tarea añadida correctamente.', 'success');
+        }
+
+        /**
+         * Creates and appends an HTML element for a task to the list.
+         * @param {Object} task - The task object with id, text, and completed properties.
+         */
+        function createTaskElement(task) {
+            const listItem = document.createElement('li');
+            listItem.className = `task-item flex items-center p-3 rounded-lg mb-2 transition duration-200 ease-in-out ${task.completed ? 'completed' : ''}`;
+            listItem.dataset.id = task.id; // Store the ID in the dataset
+
+            // Checkbox to mark as completed
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = task.completed;
+            checkbox.className = 'form-checkbox h-5 w-5 text-blue-600 rounded-full cursor-pointer';
+            checkbox.addEventListener('change', () => toggleTaskCompleted(task.id));
+
+            // Task text
+            const taskTextSpan = document.createElement('span');
+            taskTextSpan.className = 'task-text flex-grow ml-3 text-gray-700';
+            taskTextSpan.textContent = task.text;
+
+            // Button to delete individual task
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'ml-4 p-2 bg-red-400 hover:bg-red-500 text-white rounded-full transition duration-200 ease-in-out';
+            deleteButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zm-1 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                `;
+            deleteButton.addEventListener('click', () => deleteTask(task.id));
+
+            listItem.appendChild(checkbox);
+            listItem.appendChild(taskTextSpan);
+            listItem.appendChild(deleteButton);
+            taskList.appendChild(listItem);
+        }
+
+        /**
+         * Toggles the completed status of a task.
+         * @param {number} id - The ID of the task to modify.
+         */
+        function toggleTaskCompleted(id) {
+            let tasks = getTasks();
+            tasks = tasks.map(task =>
+                task.id === id ? { ...task, completed: !task.completed } : task
+            );
+            saveAllTasks(tasks); // Save all updated tasks
+            renderTasks(); // Re-render the list to apply styles
+        }
+
+        /**
+         * Deletes an individual task from the list.
+         * @param {number} id - The ID of the task to delete.
+         */
+        function deleteTask(id) {
+            let tasks = getTasks();
+            tasks = tasks.filter(task => task.id !== id);
+            saveAllTasks(tasks);
+            renderTasks();
+            showMessage('Tarea eliminada.', 'success');
+        }
+
+        /**
+         * Clears all tasks marked as completed.
+         */
+        function clearCompletedTasks() {
+            let tasks = getTasks();
+            const initialLength = tasks.length;
+            tasks = tasks.filter(task => !task.completed);
+            if (tasks.length === initialLength) {
+                showMessage('No hay tareas completadas para eliminar.');
+                return;
+            }
+            saveAllTasks(tasks);
+            renderTasks();
+            showMessage('Tareas completadas eliminadas.', 'success');
+        }
+
+        /**
+         * Loads tasks from localStorage and renders them.
+         */
+        function loadTasks() {
+            const tasks = getTasks();
+            renderTasks(tasks);
+        }
+
+        /**
+         * Gets tasks from localStorage.
+         * @returns {Array} - An array of task objects.
+         */
+        function getTasks() {
+            const tasksJSON = localStorage.getItem('tasks');
+            return tasksJSON ? JSON.parse(tasksJSON) : [];
+        }
+
+        /**
+         * Saves a single task to localStorage.
+         * @param {Object} task - The task object to save.
+         */
+        function saveTask(task) {
+            const tasks = getTasks();
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        /**
+         * Saves an entire array of tasks to localStorage.
+         * @param {Array} tasks - The array of task objects to save.
+         */
+        function saveAllTasks(tasks) {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        /**
+         * Renders all tasks in the DOM.
+         * Clears the current list and recreates the elements.
+         */
+        function renderTasks() {
+            taskList.innerHTML = ''; // Clear the current list
+            const tasks = getTasks();
+            tasks.forEach(task => createTaskElement(task));
+        }
+    </script>
+</body>
+</html>
