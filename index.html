@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario con Validación</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <form id="miFormulario">
+        <p>Nombre:</p>
+        <input type="text" id="nombre">
+        <div id="errorNombre" class="error"></div>
+
+        <p>Correo electrónico:</p>
+        <input type="email" id="correo">
+        <div id="errorCorreo" class="error"></div>
+
+        <p>Contraseña:</p>
+        <input type="contra" id="contra">
+        <div id="errorContra" class="error"></div>
+        
+        <button type="submit">Registrar</button>
+    </form>
+
+    <div id="mensajeExito"></div>
+
+    <script>
+  
+        const formulario = document.getElementById("miFormulario");
+        const nombreInput = document.getElementById("nombre");
+        const correoInput = document.getElementById("correo");
+        const passwordInput = document.getElementById("contra");
+
+        const errorNombre = document.getElementById("errorNombre");
+        const errorCorreo = document.getElementById("errorCorreo");
+        const errorPassword = document.getElementById("errorContra");
+        const mensajeExito = document.getElementById("mensajeExito");
+
+        
+        formulario.addEventListener("submit", function(event) {
+
+            event.preventDefault();
+
+
+            errorNombre.textContent = "";
+            errorCorreo.textContent = "";
+            errorPassword.textContent = "";
+            mensajeExito.textContent = "";
+            
+     
+            const nombre = nombreInput.value.trim();
+            const correo = correoInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            let esValido = true;
+
+            // 4. Realizamos las validaciones
+            
+
+            if (nombre === "") {
+                errorNombre.textContent = "El nombre no puede estar vacío.";
+                esValido = false;
+            }
+
+  
+            if (correo === "") {
+                errorCorreo.textContent = "El correo no puede estar vacío.";
+                esValido = false;
+            } else if (!correo.includes("@") || !correo.includes(".")) {
+                errorCorreo.textContent = "El formato del correo no es válido.";
+                esValido = false;
+            }
+
+  
+            if (password === "") {
+                errorContra.textContent = "La contraseña no puede estar vacía.";
+                esValido = false;
+            } else if (password.length < 6) {
+                errorContra.textContent = "La contraseña debe tener al menos 6 caracteres.";
+                esValido = false;
+            }
+
+            if (esValido) {
+                mensajeExito.textContent = "¡Registro exitoso!";
+                formulario.reset(); 
+            }
+        });
+    </script>
+</body>
+</html>
